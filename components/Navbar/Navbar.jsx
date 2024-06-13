@@ -10,10 +10,10 @@ const Navbar = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link" href="./contacto">Contacto</a>
+              <a className="nav-link" href="/Contacto">Contacto</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="./Carrito">Ver Carrito</a>
+              <a className="nav-link" href="/Carrito">Ver Carrito</a>
             </li>
           </ul>
         </div>
