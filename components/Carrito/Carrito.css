@@ -1,0 +1,83 @@
+/* carritoStyles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+.title-carrito{
+    color: #000000;
+}
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+#carrito-items {
+    flex: 1;
+    margin-right: 20px;
+}
+
+#formulario-items {
+    flex: 1;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cart-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.details {
+    flex: 1;
+}
+
+#total-price {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+#form-messages {
+    margin-top: 10px;
+    color: red;
+}
