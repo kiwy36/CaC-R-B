@@ -1,0 +1,95 @@
+#comentarios{
+    min-height: 30rem;
+}
+
+.comentarios-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.formulario {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.formulario input,
+.formulario textarea {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.formulario button {
+  padding: 10px;
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.formulario button:hover {
+  background-color: #0056b3;
+}
+
+.tarjetas {
+  flex: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card {
+  flex: 1 1 calc(33% - 20px);
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card p {
+  margin: 5px 0;
+}
+/* Estilos para tablet */
+@media (max-width: 908px) {
+    #comentarios{
+        min-height: 70rem;
+    }
+  .comentarios-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tarjetas {
+    flex: none;
+    width: 100%;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
+
+/* Estilos para móvil */
+@media (max-width: 480px) {
+    #comentarios{
+        min-height: 47rem;
+    }
+  .formulario {
+    width: 100%;
+  }
+}
