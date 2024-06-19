@@ -1,17 +1,21 @@
-// src/components/Carrito/Carrito.jsx
 import { useEffect, useState } from 'react';
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import './Carrito.css';
-import { db } from './../../Firesbase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-
+import { db } from '../../Firesbase'; // Importa la instancia de la base de datos Firestore
+import { doc, updateDoc, getDoc, collection, addDoc } from 'firebase/firestore'; // Importa funciones Firestore para manejar documentos y colecciones
 
 const Carrito = () => {
+  // Estados para el carrito de compras y detalles del formulario
   const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
   const [totalPrice, setTotalPrice] = useState(0);
   const [formMessages, setFormMessages] = useState('');
-
+  const [nombreApellido, setNombreApellido] = useState('');
+  const [numeroTarjeta, setNumeroTarjeta] = useState('');
+  const [mail, setMail] = useState('');
+  const [numeroSeguridad, setNumeroSeguridad] = useState('');
+  const [direccionEnvio, setDireccionEnvio] = useState('');
+  // Efecto para calcular el precio total del carrito cuando cambia el carrito
   useEffect(() => {
     let total = 0;
     cart.forEach(product => {
@@ -19,23 +23,23 @@ const Carrito = () => {
     });
     setTotalPrice(total);
   }, [cart]);
-
+  // Función para limpiar el carrito localmente y en el estado
   const limpiarCarrito = () => {
     localStorage.removeItem('cart');
     setCart([]);
   };
-
+  // Función asincrónica para actualizar el stock en Firestore
   const actualizarStockEnFirestore = async (productId, cantidadComprada) => {
     try {
-      const productRef = doc(db, "indumentaria", productId);
-      const productSnap = await getDoc(productRef);
+      const productRef = doc(db, "indumentaria", productId); // Referencia al documento del producto en Firestore
+      const productSnap = await getDoc(productRef); // Obtener el snapshot del documento
 
-      if (productSnap.exists()) {
-        const productData = productSnap.data();
-        const nuevoStock = productData.stock - cantidadComprada;
+      if (productSnap.exists()) {// Verificar si el producto existe en Firestore
+        const productData = productSnap.data();// Datos del producto
+        const nuevoStock = productData.stock - cantidadComprada;// Calcular nuevo stock
 
         if (nuevoStock >= 0) {
-          await updateDoc(productRef, { stock: nuevoStock });
+          await updateDoc(productRef, { stock: nuevoStock });// Actualizar el documento con el nuevo stoc
           console.log(`Stock actualizado para ${productData.name}. Nuevo stock: ${nuevoStock}`);
         } else {
           setFormMessages(`Stock insuficiente para el producto ${productData.name}.`);
@@ -45,75 +49,78 @@ const Carrito = () => {
         setFormMessages(`Producto con ID ${productId} no encontrado.`);
         return false;  // Producto no encontrado
       }
-      return true;  // Stock actualizado
+      return true;  // Retornar verdadero si el stock se actualizó correctamente
     } catch (error) {
-      console.error("Error al actualizar stock en Firestore:", error);
+      console.error("Error al actualizar stock en Firestore:", error);// Manejo de errores
       setFormMessages("Error al actualizar el stock en Firestore.");
       return false;
     }
   };
+  // Función asincrónica para crear una orden de compra en Firestore
+  const crearOrdenDeCompra = async () => {
+    try {
+      const fechaActual = new Date();
+      const orderId = `${fechaActual.getTime()}-${nombreApellido}`;
+      // Agregar un documento a la colección 'ordenDeCompra' en Firestore
+      await addDoc(collection(db, "ordenDeCompra"), {
+        id: orderId,
+        nombreApellido: nombreApellido,
+        emailDestinatario: mail,
+        direccionEnvio: direccionEnvio,
+        total: totalPrice,
+        productos: cart.map(product => ({
+          nombre: product.name,
+          cantidad: product.cantidad,
+          precioUnitario: product.price,
+          precioTotal: product.price * product.cantidad
+        })),
+        fecha: fechaActual.toISOString()// Fecha de la orden en formato ISO string
+      });
 
+      console.log("Orden de compra creada correctamente.");
+
+    } catch (error) {
+      console.error("Error al crear la orden de compra:", error);
+      setFormMessages("Error al crear la orden de compra.");
+    }
+  };
+   // Función para manejar la finalización de la compra
   const terminarCompra = async () => {
-    console.log("Iniciando la compra");
     if (cart.length === 0) {
       setFormMessages('El carrito está vacío, no se puede realizar la compra.');
-      console.log("Carrito vacío");
       return;
     }
-
-    const nombreApellido = document.getElementById('nombreApellido').value.trim();
-    const numeroTarjeta = document.getElementById('numeroTarjeta').value.trim();
-    const mail = document.getElementById('mail').value.trim();
-    const numeroSeguridad = document.getElementById('numeroSeguridad').value.trim();
-    const direccionEnvio = document.getElementById('direccionEnvio').value.trim();
-    let formIsValid = true;
-    let errorMessage = '';
-
-    if (!nombreApellido.match(/^[a-zA-Z\s]+$/)) {
-      errorMessage += 'Nombre y Apellido debe contener solo letras y espacios.\n';
-      formIsValid = false;
-    }
-
-    if (!numeroTarjeta.match(/^\d{16}$/)) {
-      errorMessage += 'Número de la Tarjeta debe contener 16 dígitos.\n';
-      formIsValid = false;
-    }
-
-    if (!mail) {
-      errorMessage += 'Email del Destinatario es obligatorio.\n';
-      formIsValid = false;
-    }
-
-    if (!numeroSeguridad.match(/^\d{3}$/)) {
-      errorMessage += 'Número de Seguridad debe contener 3 dígitos.\n';
-      formIsValid = false;
-    }
-
-    if (!direccionEnvio) {
-      errorMessage += 'Dirección de Envío es obligatoria.\n';
-      formIsValid = false;
-    }
+    // Validación del formulario
+    const formIsValid =
+      nombreApellido.trim().match(/^[a-zA-Z\s]+$/) &&
+      numeroTarjeta.trim().match(/^\d{16}$/) &&
+      mail.trim() !== '' &&
+      numeroSeguridad.trim().match(/^\d{3}$/) &&
+      direccionEnvio.trim() !== '';
 
     if (!formIsValid) {
-      setFormMessages(errorMessage);
-      console.log("Formulario no válido");
+      setFormMessages('Por favor complete todos los campos correctamente.');
       return;
     }
-
+    // Iterar sobre cada producto en el carrito y actualizar el stock en Firestore
     for (const product of cart) {
-      // Asegúrate de tener el campo correcto para el ID del documento en Firestore
-      const productId = product.docId; // Asumiendo que tu campo es docId
+      const productId = product.docId;
       const success = await actualizarStockEnFirestore(productId, product.cantidad);
       if (!success) {
-        console.log(`Error al actualizar el stock del producto ${productId}`);
         return;  // Termina el proceso si hay un error en la actualización del stock
       }
     }
-
+    // Crear la orden de compra en Firestore
+    await crearOrdenDeCompra();
+    // Mostrar mensaje de compra exitosa y limpiar el carrito y el formulario
     alert(`Compra terminada, usted gastó ${totalPrice} Kiwy Pesos.`);
     limpiarCarrito();
     setFormMessages('');
-    console.log("Compra terminada con éxito");
+    setNombreApellido('');
+    setNumeroTarjeta('');
+    setMail('');
+    setNumeroSeguridad('');
+    setDireccionEnvio('');
   };
 
   return (
@@ -143,23 +150,23 @@ const Carrito = () => {
               <form id="checkout-form">
                 <div className="mb-3">
                   <label htmlFor="nombreApellido" className="form-label">Nombre y Apellido</label>
-                  <input type="text" className="form-control" id="nombreApellido" />
+                  <input type="text" className="form-control" id="nombreApellido" value={nombreApellido} onChange={(e) => setNombreApellido(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="numeroTarjeta" className="form-label">Número de la Tarjeta</label>
-                  <input type="text" className="form-control" id="numeroTarjeta" />
+                  <input type="text" className="form-control" id="numeroTarjeta" value={numeroTarjeta} onChange={(e) => setNumeroTarjeta(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="mail" className="form-label">Email del Destinatario</label>
-                  <input type="email" className="form-control" id="mail" />
+                  <input type="email" className="form-control" id="mail" value={mail} onChange={(e) => setMail(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="numeroSeguridad" className="form-label">Número de Seguridad</label>
-                  <input type="text" className="form-control" id="numeroSeguridad" />
+                  <input type="text" className="form-control" id="numeroSeguridad" value={numeroSeguridad} onChange={(e) => setNumeroSeguridad(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="direccionEnvio" className="form-label">Dirección de Envío</label>
-                  <input type="text" className="form-control" id="direccionEnvio" />
+                  <input type="text" className="form-control" id="direccionEnvio" value={direccionEnvio} onChange={(e) => setDireccionEnvio(e.target.value)} />
                 </div>
                 <button type="button" id="terminar-compra" className="btn btn-success" onClick={terminarCompra}>Terminar Compra</button>
               </form>
@@ -172,6 +179,5 @@ const Carrito = () => {
     </>
   );
 };
-
 
 export default Carrito;
